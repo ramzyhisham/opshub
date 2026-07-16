@@ -1,0 +1,22 @@
+{
+  "short_name": "OpsHub",
+  "name": "OpsHub Operations Dashboard",
+  "description": "Progressive Web App for tracking recurring digital assets, server infrastructure, software renewals, and tasks.",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "display": "standalone",
+  "orientation": "portrait"
+}

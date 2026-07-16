@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>OpsHub | Operations & Asset Dashboard</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="OpsHub is a modern digital operations dashboard to track software renewals, API keys, databases, servers, domain expiries, and automated tasks.">
+  <meta name="theme-color" content="#09090b">
+  
+  <!-- Manifest & PWA Support -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  
+  <!-- Premium Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js for Premium Dashboard Graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  
+  <!-- App Wrapper -->
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation (Desktop) -->
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo-name-group">
+          <div class="brand-logo">
+            <i data-lucide="layers" class="brand-icon"></i>
+          </div>
+          <span class="brand-name">OpsHub</span>
+        </div>
+        <!-- Hamburger relocated inside sidebar header -->
+        <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" aria-label="Collapse Navigation">
+          <i data-lucide="chevrons-left" class="collapse-icon-left"></i>
+          <i data-lucide="chevrons-right" class="collapse-icon-right" style="display:none"></i>
+        </button>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active" data-view="dashboard" data-tooltip="Dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#assets" class="nav-item" data-view="assets" data-tooltip="Assets Grid">
+          <i data-lucide="database"></i>
+          <span>Assets</span>
+        </a>
+        <a href="#projects" class="nav-item" data-view="projects" data-tooltip="Projects">
+          <i data-lucide="folder-git-2"></i>
+          <span>Projects</span>
+        </a>
+        <a href="#tasks" class="nav-item" data-view="tasks" data-tooltip="Renewal Tasks">
+          <i data-lucide="check-square"></i>
+          <span>Tasks</span>
+          <span class="badge badge-task-count" id="sidebar-pending-tasks-badge" style="display: none;">0</span>
+        </a>
+        <a href="#calendar" class="nav-item" data-view="calendar" data-tooltip="Calendar Grid">
+          <i data-lucide="calendar"></i>
+          <span>Calendar</span>
+        </a>
+        <a href="#analytics" class="nav-item" data-view="analytics" data-tooltip="Analytics Reports">
+          <i data-lucide="bar-chart-3"></i>
+          <span>Analytics</span>
+        </a>
+        <a href="#timeline" class="nav-item" data-view="timeline" data-tooltip="Operations Timeline">
+          <i data-lucide="calendar-days"></i>
+          <span>Timeline</span>
+        </a>
+        <a href="#settings" class="nav-item" data-view="settings" data-tooltip="Settings panel">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle Theme">
+          <i data-lucide="sun" class="sun-icon"></i>
+          <i data-lucide="moon" class="moon-icon"></i>
+          <span class="theme-label">Light Mode</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Shell -->
+    <div class="app-main">
+      
+      <!-- Top Navigation Header -->
+      <header class="app-header">
+        <!-- Company Selection Dropdown -->
+        <div class="header-left">
+          <div class="company-selector-wrapper">
+            <select id="company-selector" class="company-dropdown">
+              <option value="Global">Global Operations</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Global Search Bar - Spotlight Style -->
+        <div class="header-search">
+          <div class="header-search-inner">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="global-search-input" placeholder="Search assets, projects, companies..." autocomplete="off">
+            <button class="search-clear-btn" id="search-clear-btn" aria-label="Clear Search">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Notification Bell -->
+          <button class="icon-btn notification-bell-btn" id="notification-bell-btn" aria-label="Notifications">
+            <i data-lucide="bell"></i>
+            <span class="notification-dot" id="notification-badge" style="display: none;"></span>
+          </button>
+          
+          <!-- Quick Add Button -->
+          <button class="btn btn-primary btn-quick-add" id="quick-add-asset-btn">
+            <i data-lucide="plus"></i>
+            <span>Quick Add</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content Dynamic Container -->
+      <main class="app-content-area" id="app-content">
+        <!-- Rendered view goes here -->
+      </main>
+
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="mobile-sidebar-overlay" id="mobile-sidebar-overlay"></div>
+
+    <!-- Bottom Navigation Bar (Mobile) -->
+    <nav class="app-bottom-nav">
+      <a href="#dashboard" class="bottom-nav-item active" data-view="dashboard">
+        <i data-lucide="layout-dashboard"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="#assets" class="bottom-nav-item" data-view="assets">
+        <i data-lucide="database"></i>
+        <span>Assets</span>
+      </a>
+      <a href="#tasks" class="bottom-nav-item" data-view="tasks">
+        <i data-lucide="check-square"></i>
+        <span>Tasks</span>
+      </a>
+      <a href="#calendar" class="bottom-nav-item" data-view="calendar">
+        <i data-lucide="calendar"></i>
+        <span>Calendar</span>
+      </a>
+      <a href="#more" class="bottom-nav-item" id="more-menu-btn">
+        <i data-lucide="more-horizontal"></i>
+        <span>More</span>
+      </a>
+    </nav>
+
+    <!-- Mobile More Drawer -->
+    <div class="mobile-more-overlay" id="mobile-more-overlay"></div>
+    <div class="mobile-more-drawer" id="mobile-more-drawer">
+      <div class="drawer-header">
+        <h3>OpsHub Pages</h3>
+        <button class="close-btn" id="close-more-drawer"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer-links">
+        <a href="#projects" class="drawer-link-item" data-view="projects">
+          <i data-lucide="folder-git-2"></i>
+          <span>Projects Workspace</span>
+        </a>
+        <a href="#timeline" class="drawer-link-item" data-view="timeline">
+          <i data-lucide="calendar-days"></i>
+          <span>Timeline Flow</span>
+        </a>
+        <a href="#analytics" class="drawer-link-item" data-view="analytics">
+          <i data-lucide="bar-chart-3"></i>
+          <span>Analytics Reports</span>
+        </a>
+        <a href="#settings" class="drawer-link-item" data-view="settings">
+          <i data-lucide="settings"></i>
+          <span>Settings & Data</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Notification Sidebar Panel -->
+  <div class="notification-sidebar-overlay" id="notification-overlay"></div>
+  <aside class="notification-sidebar" id="notification-sidebar">
+    <div class="notif-header">
+      <div class="header-title-row">
+        <h3>Notification Center</h3>
+        <button class="btn-text" id="notif-mark-all-read">Mark all read</button>
+      </div>
+      <button class="close-btn" id="close-notif-btn" aria-label="Close Notifications">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="notif-list" id="notif-list-container">
+      <!-- Generated reminders -->
+    </div>
+  </aside>
+
+  <!-- Sliding Asset Detail Drawer -->
+  <div class="detail-drawer-overlay" id="detail-drawer-overlay"></div>
+  <aside class="detail-drawer" id="detail-drawer">
+    <!-- Loaded dynamically -->
+  </aside>
+
+  <!-- Asset Form Modal (Create / Edit) -->
+  <div class="modal-overlay" id="asset-modal-overlay"></div>
+  <div class="modal" id="asset-modal">
+    <div class="modal-header">
+      <h3 id="asset-modal-title">Add Asset</h3>
+      <button class="close-btn" id="close-asset-modal-btn"><i data-lucide="x"></i></button>
+    </div>
+    <form class="modal-body" id="asset-form" autocomplete="off">
+      <input type="hidden" id="form-asset-id">
+      
+      <div class="form-grid">
+        <div class="form-group col-span-2">
+          <label for="form-asset-name">Asset Name <span class="required">*</span></label>
+          <input type="text" id="form-asset-name" required placeholder="e.g. mycompany.com or AWS Cluster A">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-company">Company <span class="required">*</span></label>
+          <select id="form-asset-company" required></select>
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-category">Category <span class="required">*</span></label>
+          <select id="form-asset-category" required></select>
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-provider">Provider</label>
+          <input type="text" id="form-asset-provider" placeholder="e.g. GoDaddy, AWS, Namecheap">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-provider-url">Provider Website</label>
+          <input type="url" id="form-asset-provider-url" placeholder="https://...">
+        </div>
+
+        <div class="form-group col-span-2">
+          <label for="form-asset-login-url">Login URL</label>
+          <input type="url" id="form-asset-login-url" placeholder="https://...">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-email">Account Email</label>
+          <input type="email" id="form-asset-email" placeholder="email@company.com">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-billing">Billing Account</label>
+          <input type="text" id="form-asset-billing" placeholder="e.g. Visa 1234, PayPal">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-provider-support">Provider Support Email / Info</label>
+          <input type="text" id="form-asset-provider-support" placeholder="support@hostinger.com">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-provider-recovery">Provider Recovery Email</label>
+          <input type="email" id="form-asset-provider-recovery" placeholder="backup@company.com">
+        </div>
+
+        <div class="form-group checkbox-group" style="margin-top: 20px;">
+          <label class="custom-checkbox-container" tabindex="0">
+            <input type="checkbox" id="form-asset-provider-2fa" checked>
+            <span class="custom-checkbox"></span>
+            <span>2FA Enabled</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-renewal-type">Renewal Cycle</label>
+          <select id="form-asset-renewal-type">
+            <option value="Monthly">Monthly</option>
+            <option value="Quarterly">Quarterly</option>
+            <option value="Yearly">Yearly</option>
+            <option value="One Time">One Time</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-purchase-date">Purchase Date</label>
+          <input type="date" id="form-asset-purchase-date">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-renewal-date">Next Renewal Date</label>
+          <input type="date" id="form-asset-renewal-date">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-expiry-date">Expiry Date</label>
+          <input type="date" id="form-asset-expiry-date">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-cost">Cost</label>
+          <input type="number" id="form-asset-cost" step="0.01" min="0" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-currency">Currency</label>
+          <select id="form-asset-currency">
+            <option value="USD">USD ($)</option>
+            <option value="INR">INR (₹)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+          </select>
+        </div>
+
+        <div class="form-group checkbox-group" style="margin-top: 20px;">
+          <label class="custom-checkbox-container" tabindex="0">
+            <input type="checkbox" id="form-asset-gst">
+            <span class="custom-checkbox"></span>
+            <span>Include GST (18%)</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-invoice">Invoice Number</label>
+          <input type="text" id="form-asset-invoice" placeholder="INV-XXXXXX">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-payment-method">Payment Method</label>
+          <input type="text" id="form-asset-payment-method" placeholder="e.g. Visa Credit Card, PayPal">
+        </div>
+
+        <div class="form-group checkbox-group" style="margin-top: 20px;">
+          <label class="custom-checkbox-container" tabindex="0">
+            <input type="checkbox" id="form-asset-auto-renew" checked>
+            <span class="custom-checkbox"></span>
+            <span>Auto Renew</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-status">Status</label>
+          <select id="form-asset-status">
+            <option value="Active">Active</option>
+            <option value="Renew Soon">Renew Soon</option>
+            <option value="Expired">Expired</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-owner">Owner (Responsible)</label>
+          <input type="text" id="form-asset-owner" placeholder="Name or Team">
+        </div>
+
+        <div class="form-group">
+          <label for="form-asset-project">Link to Project</label>
+          <select id="form-asset-project">
+            <option value="">No Project</option>
+          </select>
+        </div>
+
+        <div class="form-group col-span-2">
+          <label for="form-asset-tags">Tags (Comma separated)</label>
+          <input type="text" id="form-asset-tags" placeholder="e.g. production, critical, client-xyz">
+        </div>
+
+        <div class="form-group col-span-2">
+          <label for="form-asset-description">Description</label>
+          <textarea id="form-asset-description" rows="3" placeholder="Brief description of the asset..."></textarea>
+        </div>
+
+        <div class="form-group col-span-2">
+          <label for="form-asset-notes">Internal Notes</label>
+          <textarea id="form-asset-notes" rows="3" placeholder="Confidential credentials, recovery methods, or instructions..."></textarea>
+        </div>
+      </div>
+      
+      <!-- Custom Fields Section -->
+      <div class="custom-fields-section">
+        <h4 class="section-title-sm">Custom Fields</h4>
+        <div id="custom-fields-container"></div>
+        <button type="button" class="btn btn-secondary btn-sm mt-2" id="add-custom-field-btn">
+          <i data-lucide="plus-circle"></i> Add Custom Field
+        </button>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancel-asset-modal-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="save-asset-modal-btn">Save Asset</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Main JavaScript App Loader -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

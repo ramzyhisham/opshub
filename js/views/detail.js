@@ -67,6 +67,20 @@ export function renderDetailDrawer(assetId, store, app, engine) {
   // Render tab content
   const bodyContent = drawer.querySelector("#drawer-body-content");
   
+  if (activeTab === "payments") {
+    bodyContent.style.height = "100%";
+    bodyContent.style.display = "flex";
+    bodyContent.style.flexDirection = "column";
+    bodyContent.style.gap = "16px";
+    bodyContent.parentElement.style.overflowY = "hidden";
+  } else {
+    bodyContent.style.height = "";
+    bodyContent.style.display = "";
+    bodyContent.style.flexDirection = "";
+    bodyContent.style.gap = "";
+    bodyContent.parentElement.style.overflowY = "auto";
+  }
+
   if (activeTab === "overview") {
     renderOverviewTab(asset, bodyContent, store);
   } else if (activeTab === "payments") {
@@ -276,7 +290,7 @@ function renderPaymentsTab(asset, container, store, engine, app) {
 
   container.innerHTML = `
     <!-- Costs Cards Converted to Preference -->
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; flex-shrink:0;">
       <div style="background-color:var(--bg-hover); border:1px solid var(--border-color); padding: 14px; border-radius: var(--radius-md)">
         <span style="font-size:0.75rem; color:var(--text-muted); display:block; font-weight:600">RECURRING COST</span>
         <span style="font-family:var(--font-heading); font-size:1.3rem; font-weight:700; display:block; margin-top:4px">${formatValue(convertedCost)}</span>
@@ -290,24 +304,30 @@ function renderPaymentsTab(asset, container, store, engine, app) {
     </div>
 
     <!-- Quick Renewal logger form -->
-    <div class="card" style="padding:16px; background-color: rgba(255,255,255,0.015);">
-      <h4 style="font-family:var(--font-heading); font-size:0.95rem; font-weight:600; margin-bottom:12px">Log Manual Renewal / Payment</h4>
+    <div class="card" style="padding:16px; background-color: rgba(255,255,255,0.015); flex-shrink:0;">
+      <h4 style="font-family:var(--font-heading); font-size:0.95rem; font-weight:600; margin-bottom:12px">Log Manual Payment</h4>
       <form id="record-renewal-form" style="display:flex; flex-direction:column; gap:10px">
-        <div style="display:flex; gap:8px">
-          <input type="number" id="rec-cost" step="0.01" value="${asset.cost}" required placeholder="Cost" class="filter-select" style="text-align:left; flex:1">
-          <input type="text" id="rec-invoice" placeholder="Invoice No" class="filter-select" style="text-align:left; flex:1.2">
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px">
+          <div class="form-group" style="margin-bottom:0">
+            <input type="number" id="rec-cost" step="0.01" value="${asset.cost}" required placeholder="Cost" class="filter-select" style="text-align:left; width:100%">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <input type="text" id="rec-invoice" placeholder="Invoice No" class="filter-select" style="text-align:left; width:100%">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <input type="date" id="rec-date" value="${new Date().toISOString().split('T')[0]}" required class="filter-select" style="text-align:left; width:100%">
+          </div>
         </div>
-        <div style="display:flex; gap:8px">
-          <input type="text" id="rec-method" value="${asset.paymentMethod || ''}" placeholder="Payment Method" class="filter-select" style="text-align:left; flex:1">
-          <button type="submit" class="btn btn-primary btn-sm" style="flex: 0.8">Renew Cycle</button>
+        <div>
+          <button type="submit" class="btn btn-primary btn-sm" style="width:100%">Add Payment</button>
         </div>
       </form>
     </div>
 
     <!-- Payment History -->
-    <div style="display:flex; flex-direction:column; gap:8px">
-      <h4 style="font-family:var(--font-heading); font-size:0.95rem; font-weight:600; color:var(--text-muted)">PAYMENT HISTORY ($ PREFERRED)</h4>
-      <div class="tasks-table-wrapper" style="max-height: 200px; overflow-y:auto">
+    <div style="display:flex; flex-direction:column; gap:8px; flex:1; min-height:0;">
+      <h4 style="font-family:var(--font-heading); font-size:0.95rem; font-weight:600; color:var(--text-muted)">Payment History</h4>
+      <div class="tasks-table-wrapper" style="flex:1; overflow-y:auto; border:1px solid var(--border-color); border-radius:var(--radius-md);">
         <table class="tasks-table">
           <thead>
             <tr>
@@ -343,14 +363,20 @@ function renderPaymentsTab(asset, container, store, engine, app) {
       e.preventDefault();
       const rCost = parseFloat(document.getElementById("rec-cost").value) || asset.cost;
       const rInvoice = document.getElementById("rec-invoice").value;
-      const rMethod = document.getElementById("rec-method").value;
+      const rDate = document.getElementById("rec-date").value;
       
-      const success = engine.renewAsset(asset.id, rCost, rMethod, rInvoice, "Recorded manually in detail panel.");
+      const success = engine.renewAsset(asset.id, rCost, asset.paymentMethod || "", rInvoice, "Recorded manually in detail panel.", rDate);
       if (success) {
-        alert("Renewal logged successfully!");
+        alert("Payment logged successfully!");
         app.renderActiveView();
         app.updateGlobalCounters();
         renderDetailDrawer(asset.id, store, app, engine);
+        
+        // Auto scroll to newest payment (top)
+        const wrapper = document.querySelector("#drawer-body-content .tasks-table-wrapper");
+        if (wrapper) {
+          wrapper.scrollTop = 0;
+        }
       }
     });
   }

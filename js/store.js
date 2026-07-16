@@ -40,88 +40,7 @@ const DEFAULT_PROJECTS = [
   "HAPS Security Audit"
 ];
 
-const DEFAULT_PROVIDERS = [
-  {
-    id: "prov-1",
-    name: "GoDaddy",
-    portalUrl: "https://sso.godaddy.com",
-    supportUrl: "https://godaddy.com/contact-us",
-    loginEmail: "billing@healthwithatp.com",
-    recoveryEmail: "recovery-backup@dotco.com",
-    twoFactorEnabled: true,
-    supportContact: "+1 480-505-8877"
-  },
-  {
-    id: "prov-2",
-    name: "AWS EC2",
-    portalUrl: "https://console.aws.amazon.com",
-    supportUrl: "https://console.aws.amazon.com/support",
-    loginEmail: "tech-aws@healthwithatp.com",
-    recoveryEmail: "aws-admin@healthwithatp.com",
-    twoFactorEnabled: true,
-    supportContact: "Premium Enterprise Chat"
-  },
-  {
-    id: "prov-3",
-    name: "Google Cloud",
-    portalUrl: "https://admin.google.com",
-    supportUrl: "https://support.google.com/a",
-    loginEmail: "billing@dotco.com",
-    recoveryEmail: "recovery@dotco.com",
-    twoFactorEnabled: true,
-    supportContact: "GWS Admin Chat"
-  },
-  {
-    id: "prov-4",
-    name: "Apple Inc.",
-    portalUrl: "https://developer.apple.com/account",
-    supportUrl: "https://developer.apple.com/contact/",
-    loginEmail: "ios-dev@sweatsquad.com",
-    recoveryEmail: "ios-backup@sweatsquad.com",
-    twoFactorEnabled: true,
-    supportContact: "Developer Relations Form"
-  },
-  {
-    id: "prov-5",
-    name: "Razorpay",
-    portalUrl: "https://dashboard.razorpay.com",
-    supportUrl: "https://support.razorpay.com",
-    loginEmail: "finance@atpinstitute.com",
-    recoveryEmail: "atp-recover@atpinstitute.com",
-    twoFactorEnabled: false,
-    supportContact: "Ticketing & Enterprise Account Mgr"
-  },
-  {
-    id: "prov-6",
-    name: "Namecheap SSL",
-    portalUrl: "https://namecheap.com",
-    supportUrl: "https://www.namecheap.com/help-center/",
-    loginEmail: "security@grandmarituals.com",
-    recoveryEmail: "namecheap-backup@grandmarituals.com",
-    twoFactorEnabled: true,
-    supportContact: "Live Support Chat"
-  },
-  {
-    id: "prov-7",
-    name: "Bunny.net",
-    portalUrl: "https://panel.bunny.net",
-    supportUrl: "https://bunny.net/contact/",
-    loginEmail: "assets@healthwithatp.com",
-    recoveryEmail: "bunny-recovery@healthwithatp.com",
-    twoFactorEnabled: true,
-    supportContact: "support@bunny.net"
-  },
-  {
-    id: "prov-8",
-    name: "Hostinger",
-    portalUrl: "https://hpanel.hostinger.com",
-    supportUrl: "https://support.hostinger.com",
-    loginEmail: "webmaster@grandmarituals.com",
-    recoveryEmail: "recovery@grandmarituals.com",
-    twoFactorEnabled: true,
-    supportContact: "hpanel Live Help"
-  }
-];
+
 
 // Helper to construct dynamic dates relative to current date (July 16, 2026)
 const getRelativeDate = (offsetDays) => {
@@ -442,7 +361,6 @@ export class OpsHubStore {
     this.keyCompanies = "opshub_companies";
     this.keyCategories = "opshub_categories";
     this.keyProjects = "opshub_projects";
-    this.keyProviders = "opshub_providers";
     this.keyTasks = "opshub_tasks";
     this.keyNotifications = "opshub_notifications";
     this.keyActivityLogs = "opshub_activity_logs";
@@ -460,9 +378,6 @@ export class OpsHubStore {
     }
     if (!localStorage.getItem(this.keyProjects)) {
       localStorage.setItem(this.keyProjects, JSON.stringify(DEFAULT_PROJECTS));
-    }
-    if (!localStorage.getItem(this.keyProviders)) {
-      localStorage.setItem(this.keyProviders, JSON.stringify(DEFAULT_PROVIDERS));
     }
     if (!localStorage.getItem(this.keyAssets)) {
       localStorage.setItem(this.keyAssets, JSON.stringify(INITIAL_ASSETS));
@@ -540,14 +455,6 @@ export class OpsHubStore {
     localStorage.setItem(this.keyProjects, JSON.stringify(projects));
   }
 
-  getProviders() {
-    return JSON.parse(localStorage.getItem(this.keyProviders)) || [];
-  }
-
-  saveProviders(providers) {
-    localStorage.setItem(this.keyProviders, JSON.stringify(providers));
-  }
-
   getTasks() {
     return JSON.parse(localStorage.getItem(this.keyTasks)) || [];
   }
@@ -605,17 +512,31 @@ export class OpsHubStore {
     const index = assets.findIndex(a => a.id === updatedAsset.id);
     if (index !== -1) {
       const old = assets[index];
-      updatedAsset.activityLog = updatedAsset.activityLog || old.activityLog;
-      updatedAsset.activityLog.push({
+      
+      const merged = {
+        ...old,
+        ...updatedAsset,
+        isPinned: updatedAsset.isPinned !== undefined ? updatedAsset.isPinned : old.isPinned,
+        isFavorite: updatedAsset.isFavorite !== undefined ? updatedAsset.isFavorite : old.isFavorite,
+        pinned: updatedAsset.pinned !== undefined ? updatedAsset.pinned : old.pinned,
+        favorite: updatedAsset.favorite !== undefined ? updatedAsset.favorite : old.favorite,
+        paymentHistory: updatedAsset.paymentHistory !== undefined ? updatedAsset.paymentHistory : (old.paymentHistory || []),
+        renewalHistory: updatedAsset.renewalHistory !== undefined ? updatedAsset.renewalHistory : (old.renewalHistory || []),
+        attachments: updatedAsset.attachments !== undefined ? updatedAsset.attachments : (old.attachments || []),
+        activityLog: updatedAsset.activityLog !== undefined ? updatedAsset.activityLog : (old.activityLog || [])
+      };
+
+      merged.activityLog.push({
         id: "al-" + Date.now(),
         date: new Date().toISOString().replace("T", " ").substring(0, 16),
         user: "Current User",
         action: "Updated Asset",
         details: `Asset details updated.`
       });
-      assets[index] = updatedAsset;
+
+      assets[index] = merged;
       this.saveAssets(assets);
-      this.logActivity("Updated Asset", `Modified asset: ${updatedAsset.name}`, updatedAsset.company);
+      this.logActivity("Updated Asset", `Modified asset: ${merged.name}`, merged.company);
       return true;
     }
     return false;
@@ -652,7 +573,6 @@ export class OpsHubStore {
     localStorage.removeItem(this.keyCompanies);
     localStorage.removeItem(this.keyCategories);
     localStorage.removeItem(this.keyProjects);
-    localStorage.removeItem(this.keyProviders);
     localStorage.removeItem(this.keyTasks);
     localStorage.removeItem(this.keyNotifications);
     localStorage.removeItem(this.keyActivityLogs);

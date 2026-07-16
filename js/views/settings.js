@@ -1,4 +1,4 @@
-// OpsHub Settings & Database Management view - Phase 2 Premium Updates
+// OpsHub Settings & Database Management view - Reorganized Layout
 import { convertSelects } from "../components/dropdown.js";
 
 export function renderSettings(app, store, engine) {
@@ -31,17 +31,17 @@ export function renderSettings(app, store, engine) {
       </div>
     </div>
 
-    <!-- Sub sections widgets grid layout -->
+    <!-- Reorganized sections widgets grid layout -->
     <div class="widget-grid">
 
-      <!-- Companies Settings - TOP PRIORITY -->
-      <div class="card widget-span-6" style="height:fit-content">
+      <!-- 1. Organizations Settings (Top Row) -->
+      <div class="card widget-span-4" style="height:fit-content">
         <div class="widget-header">
           <h3 class="widget-title">Organizations</h3>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px">
           <form id="add-company-form" style="display:flex; gap:6px">
-            <input type="text" id="new-company-name" placeholder="Add organization name..." required class="filter-select" style="text-align:left; flex:1; height:36px; padding:0 10px; background:var(--bg-input);">
+            <input type="text" id="new-company-name" placeholder="Add organization..." required class="filter-select" style="text-align:left; flex:1; height:36px; padding:0 10px; background:var(--bg-input);">
             <button type="submit" class="btn btn-primary btn-sm">Add</button>
           </form>
           <div style="display:flex; flex-wrap:wrap; gap:6px; max-height:160px; overflow-y:auto; padding:2px">
@@ -56,14 +56,14 @@ export function renderSettings(app, store, engine) {
         </div>
       </div>
 
-      <!-- Categories Settings - TOP PRIORITY -->
-      <div class="card widget-span-6" style="height:fit-content">
+      <!-- 2. Categories Settings (Top Row) -->
+      <div class="card widget-span-4" style="height:fit-content">
         <div class="widget-header">
           <h3 class="widget-title">Asset Categories</h3>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px">
           <form id="add-category-form" style="display:flex; gap:6px">
-            <input type="text" id="new-category-name" placeholder="Add custom category..." required class="filter-select" style="text-align:left; flex:1; height:36px; padding:0 10px; background:var(--bg-input);">
+            <input type="text" id="new-category-name" placeholder="Add category..." required class="filter-select" style="text-align:left; flex:1; height:36px; padding:0 10px; background:var(--bg-input);">
             <button type="submit" class="btn btn-primary btn-sm">Add</button>
           </form>
           <div style="display:flex; flex-wrap:wrap; gap:6px; max-height:160px; overflow-y:auto; padding:2px">
@@ -78,10 +78,26 @@ export function renderSettings(app, store, engine) {
         </div>
       </div>
 
-      <!-- System Preferences & Localization Forms -->
+      <!-- 3. Custom Tags Settings (Top Row Placeholder) -->
+      <div class="card widget-span-4" style="height:fit-content; opacity: 0.75;">
+        <div class="widget-header">
+          <h3 class="widget-title">Custom Tags (Future)</h3>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px">
+          <form style="display:flex; gap:6px" disabled>
+            <input type="text" placeholder="Tags (coming soon)..." disabled class="filter-select" style="text-align:left; flex:1; height:36px; padding:0 10px; background:var(--bg-hover); border-color:transparent; cursor:not-allowed;">
+            <button type="button" disabled class="btn btn-secondary btn-sm" style="cursor:not-allowed;">Add</button>
+          </form>
+          <div style="font-size:0.78rem; color:var(--text-muted); font-style:italic; padding-top:4px;">
+            Tag-based operational tracking is planned for a future release.
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. General Preferences (Localization & UI Theme) -->
       <div class="card widget-span-8">
         <div class="widget-header">
-          <h3 class="widget-title">Preferences</h3>
+          <h3 class="widget-title">General Preferences</h3>
         </div>
         <form class="modal-body form-grid" id="pref-system-settings-form" style="padding:0">
           
@@ -150,6 +166,14 @@ export function renderSettings(app, store, engine) {
           </div>
 
           <div class="form-group">
+            <label for="pref-theme">Theme</label>
+            <select id="pref-theme">
+              <option value="dark" ${settings.theme !== 'light' ? 'selected' : ''}>Dark Mode</option>
+              <option value="light" ${settings.theme === 'light' ? 'selected' : ''}>Light Mode</option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label for="pref-landing">Default Landing Page</label>
             <select id="pref-landing">
               <option value="dashboard" ${pref.defaultLandingPage === 'dashboard' ? 'selected' : ''}>Dashboard</option>
@@ -172,9 +196,9 @@ export function renderSettings(app, store, engine) {
             </label>
           </div>
 
-          <!-- Notifications -->
+          <!-- Notifications Preferences -->
           <div class="form-group col-span-2" style="border-top:1px solid var(--border-color); padding-top:16px;">
-            <label style="margin-bottom:8px; font-weight:600;">Notification Alerts</label>
+            <label style="margin-bottom:8px; font-weight:600;">Notification Preferences</label>
             <div style="display:flex; flex-direction:column; gap:8px">
               <label class="custom-checkbox-container" tabindex="0">
                 <input type="checkbox" id="pref-notif-push" ${pref.notifications?.push ? 'checked' : ''}>
@@ -205,7 +229,7 @@ export function renderSettings(app, store, engine) {
         </form>
       </div>
 
-      <!-- Backup, Import and Reset Database operations -->
+      <!-- 5. Data Management (Backup, Reset) -->
       <div class="card widget-span-4" style="height:fit-content">
         <div class="widget-header">
           <h3 class="widget-title">Data Management</h3>
@@ -276,8 +300,14 @@ export function renderSettings(app, store, engine) {
     };
 
     settings.preferences = updatedPref;
+    settings.theme = document.getElementById("pref-theme").value;
     store.saveSettings(settings);
     store.logActivity("Preferences Saved", `Preferences configurations updated.`);
+
+    // Apply theme
+    document.documentElement.setAttribute("data-theme", settings.theme);
+    const themeLabel = document.querySelector(".theme-label");
+    if (themeLabel) themeLabel.textContent = settings.theme === "light" ? "Dark Mode" : "Light Mode";
 
     // Apply immediate compact mode changes
     if (updatedPref.compactMode) {
@@ -376,7 +406,6 @@ export function renderSettings(app, store, engine) {
       companies: store.getCompanies(),
       categories: store.getCategories(),
       projects: store.getProjects(),
-      providers: store.getProviders(),
       tasks: store.getTasks(),
       notifications: store.getNotifications(),
       logs: store.getActivityLogs(),
@@ -414,7 +443,6 @@ export function renderSettings(app, store, engine) {
           localStorage.setItem(store.keyCompanies, JSON.stringify(parsed.companies));
           localStorage.setItem(store.keyCategories, JSON.stringify(parsed.categories));
           if (parsed.projects) localStorage.setItem(store.keyProjects, JSON.stringify(parsed.projects));
-          if (parsed.providers) localStorage.setItem(store.keyProviders, JSON.stringify(parsed.providers));
           if (parsed.tasks) localStorage.setItem(store.keyTasks, JSON.stringify(parsed.tasks));
           if (parsed.notifications) localStorage.setItem(store.keyNotifications, JSON.stringify(parsed.notifications));
           if (parsed.logs) localStorage.setItem(store.keyActivityLogs, JSON.stringify(parsed.logs));

@@ -282,6 +282,32 @@ export class CustomSelect {
       this.list.scrollTop = targetTop;
     }
   }
+
+  syncValue() {
+    this.selectedValue = this.originalSelect.value;
+    const selectedItem = this.items.find(item => item.value === this.selectedValue);
+    const wrapper = this.trigger.querySelector(".custom-select-value-wrapper");
+    if (wrapper) {
+      wrapper.innerHTML = `
+        ${this.options.triggerIcon ? `<i data-lucide="${this.options.triggerIcon}" class="opt-icon-trigger" style="margin-right:6px"></i>` : ''}
+        ${selectedItem && selectedItem.icon ? `<i data-lucide="${selectedItem.icon}" class="opt-icon-trigger"></i>` : ''}
+        <span class="custom-select-text">${selectedItem ? selectedItem.label : this.options.placeholder}</span>
+      `;
+      lucide.createIcons({
+        attrs: { class: 'lucide-icon' },
+        nameAttr: 'data-lucide',
+        nodeList: wrapper.querySelectorAll('[data-lucide]')
+      });
+    }
+
+    this.optionElements.forEach(opt => {
+      if (opt.dataset.value === this.selectedValue) {
+        opt.classList.add("selected");
+      } else {
+        opt.classList.remove("selected");
+      }
+    });
+  }
 }
 
 // Convert all native selects in a scope into custom select widgets
@@ -290,6 +316,9 @@ export function convertSelects(container = document, extraOptions = {}) {
   selects.forEach(select => {
     // Skip if already converted
     if (select.nextSibling && select.nextSibling.classList && select.nextSibling.classList.contains("custom-select-container")) {
+      if (select.customSelectInstance) {
+        select.customSelectInstance.syncValue();
+      }
       return;
     }
     

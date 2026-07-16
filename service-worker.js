@@ -1,4 +1,4 @@
-const CACHE_NAME = "opshub-v3";
+const CACHE_NAME = "opshub-v6";
 const ASSETS = [
   "./",
   "./index.html",

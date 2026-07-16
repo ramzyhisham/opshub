@@ -100,6 +100,9 @@
       <header class="app-header">
         <!-- Company Selection Dropdown -->
         <div class="header-left">
+          <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open Menu">
+            <i data-lucide="menu"></i>
+          </button>
           <div class="company-selector-wrapper">
             <select id="company-selector" class="company-dropdown">
               <option value="Global">Global Operations</option>
@@ -112,6 +115,7 @@
           <div class="header-search-inner">
             <i data-lucide="search" class="search-icon"></i>
             <input type="text" id="global-search-input" placeholder="Search assets, projects, companies..." autocomplete="off">
+            <div class="search-shortcut-badge" id="search-shortcut-badge">Ctrl + K</div>
             <button class="search-clear-btn" id="search-clear-btn" aria-label="Clear Search">
               <i data-lucide="x"></i>
             </button>
@@ -179,13 +183,13 @@
           <i data-lucide="folder-git-2"></i>
           <span>Projects Workspace</span>
         </a>
-        <a href="#timeline" class="drawer-link-item" data-view="timeline">
-          <i data-lucide="calendar-days"></i>
-          <span>Timeline Flow</span>
-        </a>
         <a href="#analytics" class="drawer-link-item" data-view="analytics">
           <i data-lucide="bar-chart-3"></i>
           <span>Analytics Reports</span>
+        </a>
+        <a href="#timeline" class="drawer-link-item" data-view="timeline">
+          <i data-lucide="calendar-days"></i>
+          <span>Timeline Flow</span>
         </a>
         <a href="#settings" class="drawer-link-item" data-view="settings">
           <i data-lucide="settings"></i>
@@ -409,6 +413,6 @@
   </div>
 
   <!-- Main JavaScript App Loader -->
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/app.js?v=6"></script>
 </body>
 </html>

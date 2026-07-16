@@ -126,11 +126,15 @@ class OpsHubApp {
     // Header Search
     const searchInput = document.getElementById("global-search-input");
     const clearSearch = document.getElementById("search-clear-btn");
+    const shortcutBadge = document.getElementById("search-shortcut-badge");
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
         const val = e.target.value.trim();
         if (clearSearch) {
           clearSearch.classList.toggle("visible", val.length > 0);
+        }
+        if (shortcutBadge) {
+          shortcutBadge.style.display = val.length > 0 ? "none" : "block";
         }
         this.renderActiveView();
       });
@@ -140,9 +144,21 @@ class OpsHubApp {
       clearSearch.addEventListener("click", () => {
         searchInput.value = "";
         clearSearch.classList.remove("visible");
+        if (shortcutBadge) {
+          shortcutBadge.style.display = "block";
+        }
         this.renderActiveView();
       });
     }
+
+    // Keyboard shortcut (Ctrl + K / Cmd + K) to focus search
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInput?.focus();
+        searchInput?.select();
+      }
+    });
 
     // Toggler and buttons
     document.getElementById("theme-toggle-btn")?.addEventListener("click", () => this.toggleTheme());
@@ -161,7 +177,6 @@ class OpsHubApp {
     // Mobile Sidebar - Drawer Toggle
     const mobileMenuBtn = document.getElementById("mobile-menu-btn");
     const mobileSidebarOverlay = document.getElementById("mobile-sidebar-overlay");
-    const sidebar = document.getElementById("app-sidebar");
     
     const openMobileSidebar = () => {
       sidebar?.classList.add("mobile-open");
@@ -411,8 +426,6 @@ class OpsHubApp {
         this.activeProject = badge.dataset.name;
         window.location.hash = "#projects";
       });
-    });
-
     });
   }
 

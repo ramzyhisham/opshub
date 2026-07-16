@@ -95,18 +95,31 @@ export function renderDashboard(app, store, engine) {
   const container = document.getElementById("app-content");
 
   // Get saved widgets layout or use default
-  const widgetLayout = settings.dashboardLayout || ["spend", "renewals", "focus", "tasks", "timeline", "companies", "activity", "notifications", "quick"];
+  const widgetLayout = (settings.dashboardLayout || ["spend", "renewals", "focus", "tasks", "companies", "activity", "notifications", "quick"]).filter(w => w !== "timeline");
 
   // Core templates of all widgets
   const widgetTemplates = {
     spend: `
-      <!-- Monthly Spend Card -->
-      <div class="card stat-card stat-success" data-widget="spend">
+      <!-- Spend Card (Monthly & Annual Spend side-by-side) -->
+      <div class="card widget-span-8" data-widget="spend" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; padding: 20px 24px; min-height: 120px;">
         ${renderWidgetControls("spend", widgetLayout)}
-        <div class="stat-icon-box"><i data-lucide="calculator"></i></div>
-        <div class="stat-details">
-          <h4>Aggregate Monthly Spend</h4>
-          <div class="stat-value">${formatValue(monthlySpend)}</div>
+        <div style="display:flex; align-items:center; gap: 16px; border-right: 1px solid var(--border-color); padding-right: 16px;">
+          <div class="stat-icon-box" style="background-color: rgba(16, 185, 129, 0.08); color: var(--color-success); width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink:0;">
+            <i data-lucide="calculator" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div class="stat-details">
+            <h4 style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Monthly Spend</h4>
+            <div class="stat-value" style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700; color: var(--text-main);">${formatValue(monthlySpend)}</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap: 16px;">
+          <div class="stat-icon-box" style="background-color: rgba(99, 102, 241, 0.08); color: var(--color-primary); width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink:0;">
+            <i data-lucide="banknote" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div class="stat-details">
+            <h4 style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Annual Spend</h4>
+            <div class="stat-value" style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700; color: var(--text-main);">${formatValue(annualSpend)}</div>
+          </div>
         </div>
       </div>
     `,
@@ -201,22 +214,7 @@ export function renderDashboard(app, store, engine) {
         </div>
       </div>
     `,
-    timeline: `
-      <!-- Cost Graph representation / timeline slider -->
-      <div class="card widget-span-8" data-widget="timeline">
-        <div class="widget-header">
-          <h3 class="widget-title">Financial Operations Outlook</h3>
-          ${renderWidgetControls("timeline", widgetLayout)}
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; background-color:var(--bg-hover); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-color)">
-          <div>
-            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600">AGGREGATE ANNUAL COSTS</span>
-            <strong style="font-family:var(--font-heading); font-size:1.4rem; font-weight:700; display:block; margin-top:4px">${formatValue(annualSpend)}</strong>
-          </div>
-          <a href="#finance" class="btn btn-primary btn-sm">Open Financial Ledger</a>
-        </div>
-      </div>
-    `,
+
     companies: `
       <!-- Companies Distribution -->
       <div class="card widget-span-4" data-widget="companies">

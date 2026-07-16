@@ -144,13 +144,13 @@ export class OpsHubEngine {
   }
 
   // Force execute a renewal: updates payment history, logs activity, and sets next renewal date
-  renewAsset(assetId, renewalCost, paymentMethod, invoiceNumber, notes = "") {
+  renewAsset(assetId, renewalCost, paymentMethod, invoiceNumber, notes = "", customDate = null) {
     const assets = this.store.getAssets();
     const index = assets.findIndex(a => a.id === assetId);
     if (index === -1) return false;
 
     const asset = assets[index];
-    const todayStr = "2026-07-16";
+    const todayStr = customDate || "2026-07-16";
     const currentRenewalDate = asset.renewalDate;
 
     // Calculate next renewal date based on renewalType

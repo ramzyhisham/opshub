@@ -117,6 +117,21 @@ export function renderProjects(app, store, engine) {
           ` : ''}
 
           <div class="dep-flow-list">
+            <!-- Project Root Node -->
+            <div class="dep-flow-item" style="width:100%">
+              <div class="dep-flow-node" style="border-color: var(--border-color); background-color: var(--bg-hover); padding: 12px; text-align: center; border-radius: var(--radius-md);">
+                <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                  <i data-lucide="folder-git-2" style="width:16px; height:16px; color:var(--color-primary);"></i>
+                  <span style="font-family:var(--font-heading); font-size:0.9rem; font-weight:700; color:var(--text-main);">${selectedProject}</span>
+                </div>
+              </div>
+              ${sortedAssets.length > 0 ? `
+                <div class="dep-flow-arrow">
+                  <i data-lucide="arrow-down" style="width:14px; height:14px; color:var(--border-color);"></i>
+                </div>
+              ` : ''}
+            </div>
+
             ${sortedAssets.map((a, idx) => {
               let statusColor = "var(--color-success)";
               let statusBg = "rgba(16,185,129,0.08)";

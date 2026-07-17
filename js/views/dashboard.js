@@ -23,21 +23,24 @@ export function renderDashboard(app, store, engine) {
   const today = new Date(todayStr);
 
   const settings = store.getSettings();
-  const pref = settings.preferences || { currency: "USD" };
-  const rates = settings.currencyRates || { USD: 1.0, INR: 83.5, EUR: 0.92, GBP: 0.78 };
+  const userCurrency = store.getUserCurrency();
 
   const convertAmount = (val, fromCur, toCur) => {
-    if (!val) return 0;
-    const usdVal = val / (rates[fromCur] || 1.0);
-    return usdVal * (rates[toCur] || 1.0);
+    return store.convertCost(val, fromCur, toCur);
   };
-  const userCurrency = pref.currency || "USD";
 
   const formatValue = (amount) => {
-    const symbolMap = { USD: "$", INR: "₹", EUR: "€", GBP: "£", AED: "AED ", SAR: "SAR " };
-    const sym = symbolMap[userCurrency] || userCurrency + " ";
-    return sym + amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const symbol = store.getCurrencySymbol(userCurrency);
+    const numFormat = settings.preferences?.numberFormat || "International";
+    let formattedVal;
+    if (numFormat === "Indian") {
+      formattedVal = amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else {
+      formattedVal = amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return `${symbol}${formattedVal}`;
   };
+
 
   // Compile general metrics
   let totalAssetsCount = assets.length;
@@ -152,7 +155,7 @@ export function renderDashboard(app, store, engine) {
                 <tr class="clickable-row" data-id="${p.id}">
                   <td data-label="Asset Name"><strong>${p.name}</strong><br><span style="font-size:0.75rem; color:var(--text-muted)">${p.category} • ${p.company}</span></td>
                   <td data-label="Renewal Date">${p.renewalDate}</td>
-                  <td data-label="Cost" style="font-weight:600">${p.currency} ${p.cost.toFixed(2)}</td>
+                  <td data-label="Cost" style="font-weight:600">${store.formatCost(p.cost, p.currency)}</td>
                   <td data-label="Auto"><span class="badge ${p.autoRenew ? 'status-active' : 'status-cancelled'}">${p.autoRenew ? 'Yes' : 'No'}</span></td>
                   <td data-label="Status"><span class="badge ${p.status === 'Expired' ? 'status-expired' : (p.status === 'Renew Soon' ? 'status-renew' : 'status-active')}">${p.status}</span></td>
                   <td data-label="Action"><button class="btn btn-primary btn-sm renew-quick-btn" data-id="${p.id}">Renew</button></td>

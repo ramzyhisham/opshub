@@ -3,7 +3,7 @@ import { convertSelects } from "../components/dropdown.js";
 
 export function renderAssets(app, store, engine) {
   // Capture focus/cursor state of search input before re-rendering
-  const searchInputActive = document.activeElement && document.activeElement.id === "filter-search-inline";
+  const searchInputActive = document.activeElement && document.activeElement.id === "asset-search-input";
   const searchCursorPos = searchInputActive ? document.activeElement.selectionStart : null;
 
   const currentCategory = app.activeFilters.category || "All";
@@ -48,65 +48,75 @@ export function renderAssets(app, store, engine) {
 
   const container = document.getElementById("isolated-assets-view-mount") || document.getElementById("app-content");
   container.innerHTML = `
-    <div class="view-header">
+    <div class="view-header" style="flex-direction: column; align-items: flex-start; gap: 16px;">
       <div class="view-title-group">
         <h2>Digital Assets Repository</h2>
         <p>Single source of truth for tracking active services and subscriptions (${assets.length} items)</p>
       </div>
-      <div class="header-actions" style="display:flex; gap:10px; align-items: center; position: relative;">
+      
+      <!-- Relocated search bar directly below heading matching global search styling -->
+      <div class="header-search" style="max-width: 500px; width: 100%; margin: 0;">
+        <div class="header-search-inner">
+          <i data-lucide="search" class="search-icon"></i>
+          <input type="text" id="asset-search-input" placeholder="Search assets..." value="${app.activeFilters.search || ''}" autocomplete="off" style="width: 100%;">
+          ${app.activeFilters.search ? `
+            <button class="search-clear-btn visible" id="asset-search-clear-btn" aria-label="Clear Search" style="display: flex;">
+              <i data-lucide="x"></i>
+            </button>
+          ` : ''}
+        </div>
+      </div>
+      
+      <!-- Action buttons row -->
+      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 12px 0; margin-top: 8px; position: relative;">
         <button class="btn btn-secondary" id="export-csv-btn">
           <i data-lucide="download"></i> Export CSV
         </button>
-        <button class="btn btn-secondary" id="filters-toggle-btn" style="display:flex; align-items:center; gap:6px;">
-          <i data-lucide="filter" style="width:16px; height:16px"></i> Filters
-        </button>
+        
+        <div class="filters-popover-container">
+          <button class="btn btn-secondary" id="filters-toggle-btn" style="display:flex; align-items:center; gap:6px;">
+            <i data-lucide="filter" style="width:16px; height:16px"></i> Filters
+          </button>
 
-        <!-- Toggleable filters popover container -->
-        <div id="filters-popover" class="filters-popover" style="display: ${filtersOpen ? 'flex' : 'none'}; position: absolute; top: calc(100% + 8px); right: 0; z-index: 1000; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; width: 280px; box-shadow: var(--shadow-lg); flex-direction: column; gap: 12px;">
-          <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-main); margin-bottom: 4px;">Filter Assets</div>
-          
-          <div class="form-group" style="margin-bottom:0">
-            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Category</label>
-            <select id="filter-category" class="filter-select" style="width:100%; text-align:left;">
-              <option value="All">All Categories</option>
-              ${categories.map(c => `<option value="${c}" ${c === currentCategory ? 'selected' : ''}>${c}</option>`).join("")}
-            </select>
-          </div>
-          
-          <div class="form-group" style="margin-bottom:0">
-            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Status</label>
-            <select id="filter-status" class="filter-select" style="width:100%; text-align:left;">
-              <option value="All">All Statuses</option>
-              <option value="Active" ${currentStatus === 'Active' ? 'selected' : ''}>Active</option>
-              <option value="Renew Soon" ${currentStatus === 'Renew Soon' ? 'selected' : ''}>Renew Soon</option>
-              <option value="Expired" ${currentStatus === 'Expired' ? 'selected' : ''}>Expired</option>
-              <option value="Cancelled" ${currentStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-            </select>
-          </div>
-
-          <div class="form-group" style="margin-bottom:0">
-            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Renewal Type</label>
-            <select id="filter-renewal" class="filter-select" style="width:100%; text-align:left;">
-              <option value="All">All Renewal Types</option>
-              <option value="Monthly" ${currentRenewal === 'Monthly' ? 'selected' : ''}>Monthly</option>
-              <option value="Quarterly" ${currentRenewal === 'Quarterly' ? 'selected' : ''}>Quarterly</option>
-              <option value="Yearly" ${currentRenewal === 'Yearly' ? 'selected' : ''}>Yearly</option>
-              <option value="One Time" ${currentRenewal === 'One Time' ? 'selected' : ''}>One Time</option>
-            </select>
-          </div>
-
-          <div class="form-group" style="margin-bottom:0">
-            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Search</label>
-            <div class="filter-search-input" style="max-width:100%; width:100%; margin-left:0;">
-              <i data-lucide="search" style="left:8px;"></i>
-              <input type="text" id="filter-search-inline" placeholder="Search name, provider..." value="${searchQuery}" style="width:100%; padding-left:26px;">
+          <!-- Toggleable filters popover container using standardized styling -->
+          <div id="filters-popover" class="filters-popover ${filtersOpen ? 'open' : ''}">
+            <div class="filters-popover-title">Filter Assets</div>
+            
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Category</label>
+              <select id="filter-category" class="filter-select" style="width:100%; text-align:left;">
+                <option value="All">All Categories</option>
+                ${categories.map(c => `<option value="${c}" ${c === currentCategory ? 'selected' : ''}>${c}</option>`).join("")}
+              </select>
             </div>
-          </div>
+            
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Status</label>
+              <select id="filter-status" class="filter-select" style="width:100%; text-align:left;">
+                <option value="All">All Statuses</option>
+                <option value="Active" ${currentStatus === 'Active' ? 'selected' : ''}>Active</option>
+                <option value="Renew Soon" ${currentStatus === 'Renew Soon' ? 'selected' : ''}>Renew Soon</option>
+                <option value="Expired" ${currentStatus === 'Expired' ? 'selected' : ''}>Expired</option>
+                <option value="Cancelled" ${currentStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+              </select>
+            </div>
 
-          <div style="display:flex; justify-content:flex-end; margin-top:8px; border-top:1px solid var(--border-color); padding-top:12px">
-            <button class="filter-reset-btn" id="filter-reset-btn" style="width:100%; justify-content:center; height:28px;">
-              <i data-lucide="x" style="width:12px; height:12px;"></i> Reset Filters
-            </button>
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Renewal Type</label>
+              <select id="filter-renewal" class="filter-select" style="width:100%; text-align:left;">
+                <option value="All">All Renewal Types</option>
+                <option value="Monthly" ${currentRenewal === 'Monthly' ? 'selected' : ''}>Monthly</option>
+                <option value="Quarterly" ${currentRenewal === 'Quarterly' ? 'selected' : ''}>Quarterly</option>
+                <option value="Yearly" ${currentRenewal === 'Yearly' ? 'selected' : ''}>Yearly</option>
+                <option value="One Time" ${currentRenewal === 'One Time' ? 'selected' : ''}>One Time</option>
+              </select>
+            </div>
+
+            <div class="filters-popover-footer">
+              <button class="filter-reset-btn" id="filter-reset-btn" style="width:100%; justify-content:center; height:28px;">
+                <i data-lucide="x" style="width:12px; height:12px;"></i> Reset Filters
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -169,7 +179,7 @@ export function renderAssets(app, store, engine) {
 
             <div class="asset-card-footer">
               <div>
-                <span class="cost-amount">${a.cost > 0 ? `${a.currency} ${a.cost.toFixed(2)}` : 'Free'}</span>
+                <span class="cost-amount">${a.cost > 0 ? store.formatCost(a.cost, a.currency) : 'Free'}</span>
                 <span style="font-size:0.75rem; color:var(--text-muted)">/${a.renewalType === 'Monthly' ? 'mo' : (a.renewalType === 'Yearly' ? 'yr' : 'cycle')}</span>
               </div>
               <span class="badge ${statusClass}">${a.status}</span>
@@ -185,7 +195,7 @@ export function renderAssets(app, store, engine) {
 
   // Restore focus to search input if it was active
   if (searchInputActive) {
-    const input = document.getElementById("filter-search-inline");
+    const input = document.getElementById("asset-search-input");
     if (input) {
       input.focus();
       if (searchCursorPos !== null) {
@@ -211,15 +221,24 @@ export function renderAssets(app, store, engine) {
   });
 
   document.getElementById("filter-reset-btn").addEventListener("click", () => {
-    app.activeFilters = { category: "All", status: "All", renewal: "All", search: "" };
+    app.activeFilters = { category: "All", status: "All", renewal: "All", search: app.activeFilters.search || "" };
     renderAssets(app, store, engine);
   });
 
-  // Inline search filter
-  const inlineSearch = document.getElementById("filter-search-inline");
-  if (inlineSearch) {
-    inlineSearch.addEventListener("input", (e) => {
+  // Relocated search input binding
+  const assetSearch = document.getElementById("asset-search-input");
+  if (assetSearch) {
+    assetSearch.addEventListener("input", (e) => {
       app.activeFilters.search = e.target.value;
+      renderAssets(app, store, engine);
+    });
+  }
+
+  // Clear search button binding
+  const clearSearchBtn = document.getElementById("asset-search-clear-btn");
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", () => {
+      app.activeFilters.search = "";
       renderAssets(app, store, engine);
     });
   }
@@ -231,16 +250,13 @@ export function renderAssets(app, store, engine) {
   if (toggleBtn && popover) {
     toggleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const isOpen = popover.style.display === "flex";
-      popover.style.display = isOpen ? "none" : "flex";
-      app.filtersOpen = !isOpen;
-      
-      // Auto focus search field when opening filters
-      if (!isOpen) {
-        setTimeout(() => {
-          document.getElementById("filter-search-inline")?.focus();
-        }, 50);
+      const isOpen = popover.classList.contains("open");
+      if (isOpen) {
+        popover.classList.remove("open");
+      } else {
+        popover.classList.add("open");
       }
+      app.filtersOpen = !isOpen;
     });
 
     popover.addEventListener("click", (e) => {
@@ -248,12 +264,13 @@ export function renderAssets(app, store, engine) {
     });
 
     document.addEventListener("click", (e) => {
-      if (popover.style.display === "flex" && !popover.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
-        popover.style.display = "none";
+      if (popover.classList.contains("open") && !popover.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+        popover.classList.remove("open");
         app.filtersOpen = false;
       }
     });
   }
+
 
   // Clicking cards to open detail drawer
   document.querySelectorAll(".asset-card").forEach(card => {

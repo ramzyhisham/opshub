@@ -2,8 +2,6 @@
 
 export function renderCalendar(app, store, engine) {
   const currentCompany = app.currentCompany;
-  const assets = store.getAssets().filter(a => currentCompany === "Global" || a.company === currentCompany);
-  const tasks = store.getTasks().filter(t => currentCompany === "Global" || t.company === currentCompany);
 
   // Calendar parameters stored in app context
   app.calendarState = app.calendarState || {
@@ -15,8 +13,22 @@ export function renderCalendar(app, store, engine) {
 
   const cState = app.calendarState;
 
-  // Filter out events
+  // Filters State
   const categoryFilter = app.activeCalendarFilters?.category || "All";
+  const calCompany = app.activeCalendarFilters?.company || "All";
+
+  // Filter out assets and tasks by company
+  let assets = store.getAssets().filter(a => currentCompany === "Global" || a.company === currentCompany);
+  if (calCompany !== "All") {
+    assets = assets.filter(a => a.company === calCompany);
+  }
+
+  let tasks = store.getTasks().filter(t => currentCompany === "Global" || t.company === currentCompany);
+  if (calCompany !== "All") {
+    tasks = tasks.filter(t => t.company === calCompany);
+  }
+
+  // Filter out events
   let filteredAssets = assets;
   if (categoryFilter !== "All") {
     filteredAssets = assets.filter(a => a.category === categoryFilter);
@@ -32,7 +44,7 @@ export function renderCalendar(app, store, engine) {
         id: a.id,
         type: "renewal",
         date: a.renewalDate,
-        title: `Renew: ${a.name}`,
+        title: `Renew: ${a.name} (${a.cost > 0 ? store.formatCost(a.cost, a.currency) : 'Free'})`,
         item: a
       });
     }
@@ -41,7 +53,7 @@ export function renderCalendar(app, store, engine) {
         id: a.id,
         type: "expiry",
         date: a.expiryDate,
-        title: `Expiry: ${a.name}`,
+        title: `Expiry: ${a.name} (${a.cost > 0 ? store.formatCost(a.cost, a.currency) : 'Free'})`,
         item: a
       });
     }
@@ -60,6 +72,7 @@ export function renderCalendar(app, store, engine) {
   });
 
   const categories = store.getCategories();
+  const companies = store.getCompanies();
 
   const container = document.getElementById("app-content");
   container.innerHTML = `
@@ -68,28 +81,54 @@ export function renderCalendar(app, store, engine) {
         <h2>Operations Calendar</h2>
         <p>Dynamic schedules of renewals, expirations, and due tasks</p>
       </div>
-      <div class="header-actions" style="display:flex; gap:8px">
-        <button class="btn btn-secondary btn-sm cal-view-btn ${cState.view === 'month' ? 'btn-primary' : ''}" data-view="month">Month</button>
-        <button class="btn btn-secondary btn-sm cal-view-btn ${cState.view === 'week' ? 'btn-primary' : ''}" data-view="week">Week</button>
-        <button class="btn btn-secondary btn-sm cal-view-btn ${cState.view === 'agenda' ? 'btn-primary' : ''}" data-view="agenda">Agenda</button>
+      <div class="header-actions" style="display:flex; gap:10px; align-items: center; position: relative;">
+        <div class="filters-popover-container">
+          <button class="btn btn-secondary" id="filters-toggle-btn" style="display:flex; align-items:center; gap:6px; height: 38px;">
+            <i data-lucide="filter" style="width:16px; height:16px"></i> Filters
+          </button>
+
+          <!-- Toggleable filters popover container using standardized styling -->
+          <div id="filters-popover" class="filters-popover ${app.filtersOpen ? 'open' : ''}">
+            <div class="filters-popover-title">Filter Calendar</div>
+            
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Calendar View</label>
+              <select id="cal-filter-view" class="filter-select" style="width:100%; text-align:left;">
+                <option value="month" ${cState.view === 'month' ? 'selected' : ''}>Month View</option>
+                <option value="week" ${cState.view === 'week' ? 'selected' : ''}>Week View</option>
+                <option value="agenda" ${cState.view === 'agenda' ? 'selected' : ''}>Agenda View</option>
+              </select>
+            </div>
+            
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Category</label>
+              <select id="cal-filter-category" class="filter-select" style="width:100%; text-align:left;">
+                <option value="All">All Categories</option>
+                ${categories.map(c => `<option value="${c}" ${c === categoryFilter ? 'selected' : ''}>${c}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Organization</label>
+              <select id="cal-filter-company" class="filter-select" style="width:100%; text-align:left;">
+                <option value="All" ${calCompany === 'All' ? 'selected' : ''}>All Organizations</option>
+                ${companies.map(c => `<option value="${c}" ${c === calCompany ? 'selected' : ''}>${c}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="filters-popover-footer">
+              <button class="filter-reset-btn" id="filter-reset-btn" style="width:100%; justify-content:center; height:28px;">
+                <i data-lucide="x" style="width:12px; height:12px;"></i> Reset Filters
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Filter toolbar -->
-    <div class="filters-row">
-      <div class="filters-left">
-        <div style="display:flex; align-items:center; gap:6px">
-          <i data-lucide="filter" style="width:16px; height:16px; color:var(--text-muted)"></i>
-          <span style="font-size:0.85rem; color:var(--text-muted); font-weight:600">Filters:</span>
-        </div>
-        
-        <select id="cal-filter-category" class="filter-select">
-          <option value="All">All Categories</option>
-          ${categories.map(c => `<option value="${c}" ${c === categoryFilter ? 'selected' : ''}>${c}</option>`).join("")}
-        </select>
-      </div>
-
-      <div class="filters-right" id="calendar-date-nav-controls">
+    <!-- Calendar Header with Date Navigation -->
+    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-color); border-bottom:1px solid var(--border-color); padding: 12px 0; margin-bottom: 16px;">
+      <div id="calendar-date-nav-controls">
         <!-- populated dynamically based on view -->
       </div>
     </div>
@@ -115,20 +154,57 @@ export function renderCalendar(app, store, engine) {
 
   // --- BIND EVENT HANDLERS ---
   
-  // View Toggle clicks
-  document.querySelectorAll(".cal-view-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      cState.view = btn.dataset.view;
-      renderCalendar(app, store, engine);
-    });
+  // Filters bindings
+  document.getElementById("cal-filter-view").addEventListener("change", (e) => {
+    cState.view = e.target.value;
+    renderCalendar(app, store, engine);
   });
 
-  // Filters change
   document.getElementById("cal-filter-category").addEventListener("change", (e) => {
     app.activeCalendarFilters = app.activeCalendarFilters || {};
     app.activeCalendarFilters.category = e.target.value;
     renderCalendar(app, store, engine);
   });
+
+  document.getElementById("cal-filter-company").addEventListener("change", (e) => {
+    app.activeCalendarFilters = app.activeCalendarFilters || {};
+    app.activeCalendarFilters.company = e.target.value;
+    renderCalendar(app, store, engine);
+  });
+
+  document.getElementById("filter-reset-btn").addEventListener("click", () => {
+    app.activeCalendarFilters = { category: "All", company: "All" };
+    cState.view = "month";
+    renderCalendar(app, store, engine);
+  });
+
+  // Popover toggle binding
+  const popover = document.getElementById("filters-popover");
+  const toggleBtn = document.getElementById("filters-toggle-btn");
+  
+  if (toggleBtn && popover) {
+    toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = popover.classList.contains("open");
+      if (isOpen) {
+        popover.classList.remove("open");
+      } else {
+        popover.classList.add("open");
+      }
+      app.filtersOpen = !isOpen;
+    });
+
+    popover.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (popover.classList.contains("open") && !popover.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+        popover.classList.remove("open");
+        app.filtersOpen = false;
+      }
+    });
+  }
 
   // Bind clicks inside the calendars (events opening details)
   document.querySelectorAll(".calendar-event, .agenda-item").forEach(el => {

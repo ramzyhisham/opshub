@@ -8,13 +8,42 @@ export function renderTasks(app, store, engine) {
   // Filters State
   const currentStatus = app.activeTaskFilters?.status || "Pending";
   const currentPriority = app.activeTaskFilters?.priority || "All";
+  const currentDueDate = app.activeTaskFilters?.dueDate || "All";
+  const currentAssignedTo = app.activeTaskFilters?.assignedTo || "All";
 
+  // Filter tasks
   if (currentStatus !== "All") {
     tasks = tasks.filter(t => t.status === currentStatus);
   }
   if (currentPriority !== "All") {
     tasks = tasks.filter(t => t.priority === currentPriority);
   }
+  if (currentAssignedTo !== "All") {
+    tasks = tasks.filter(t => t.assignedTo === currentAssignedTo);
+  }
+  if (currentDueDate !== "All") {
+    const todayStr = "2026-07-16";
+    const today = new Date(todayStr);
+    tasks = tasks.filter(t => {
+      const dDate = new Date(t.dueDate);
+      const diffTime = dDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (currentDueDate === "Overdue") {
+        return t.status === "Pending" && diffDays < 0;
+      } else if (currentDueDate === "Today") {
+        return diffDays === 0;
+      } else if (currentDueDate === "This Week") {
+        return diffDays >= 0 && diffDays <= 7;
+      } else if (currentDueDate === "This Month") {
+        return diffDays >= 0 && diffDays <= 30;
+      }
+      return true;
+    });
+  }
+
+  // Get unique assignees
+  const uniqueAssignees = [...new Set(store.getTasks().map(t => t.assignedTo).filter(Boolean))];
 
   // Sort Tasks: Pending tasks due first
   tasks.sort((a, b) => {
@@ -35,33 +64,65 @@ export function renderTasks(app, store, engine) {
         <h2>Auto-Generated Renewal Tasks</h2>
         <p>Operational tasks created automatically based on asset renewal cycles</p>
       </div>
-      <div class="header-actions">
-        <span class="badge status-active" style="padding: 8px 12px; font-size:0.85rem">
+      <div class="header-actions" style="display:flex; gap:10px; align-items: center; position: relative;">
+        <span class="badge status-active" style="padding: 8px 12px; font-size:0.85rem; height: 38px; display: inline-flex; align-items: center;">
           Pending Tasks: ${store.getTasks().filter(t => t.status === "Pending" && (currentCompany === "Global" || t.company === currentCompany)).length}
         </span>
-      </div>
-    </div>
+        
+        <div class="filters-popover-container">
+          <button class="btn btn-secondary" id="filters-toggle-btn" style="display:flex; align-items:center; gap:6px; height: 38px;">
+            <i data-lucide="filter" style="width:16px; height:16px"></i> Filters
+          </button>
 
-    <!-- Filters Row -->
-    <div class="filters-row">
-      <div class="filters-left">
-        <div style="display:flex; align-items:center; gap:6px">
-          <i data-lucide="filter" style="width:16px; height:16px; color:var(--text-muted)"></i>
-          <span style="font-size:0.85rem; color:var(--text-muted); font-weight:600">Filters:</span>
+          <!-- Toggleable filters popover container using standardized styling -->
+          <div id="filters-popover" class="filters-popover ${app.filtersOpen ? 'open' : ''}">
+            <div class="filters-popover-title">Filter Tasks</div>
+            
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Status</label>
+              <select id="task-filter-status" class="filter-select" style="width:100%; text-align:left;">
+                <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
+                <option value="Completed" ${currentStatus === 'Completed' ? 'selected' : ''}>Completed</option>
+                <option value="All" ${currentStatus === 'All' ? 'selected' : ''}>All Tasks</option>
+              </select>
+            </div>
+            
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Priority</label>
+              <select id="task-filter-priority" class="filter-select" style="width:100%; text-align:left;">
+                <option value="All" ${currentPriority === 'All' ? 'selected' : ''}>All Priorities</option>
+                <option value="High" ${currentPriority === 'High' ? 'selected' : ''}>High Priority</option>
+                <option value="Medium" ${currentPriority === 'Medium' ? 'selected' : ''}>Medium Priority</option>
+                <option value="Low" ${currentPriority === 'Low' ? 'selected' : ''}>Low Priority</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Due Date</label>
+              <select id="task-filter-due" class="filter-select" style="width:100%; text-align:left;">
+                <option value="All" ${currentDueDate === 'All' ? 'selected' : ''}>All Due Dates</option>
+                <option value="Overdue" ${currentDueDate === 'Overdue' ? 'selected' : ''}>Overdue</option>
+                <option value="Today" ${currentDueDate === 'Today' ? 'selected' : ''}>Today</option>
+                <option value="This Week" ${currentDueDate === 'This Week' ? 'selected' : ''}>This Week</option>
+                <option value="This Month" ${currentDueDate === 'This Month' ? 'selected' : ''}>This Month</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block">Assigned To</label>
+              <select id="task-filter-assigned" class="filter-select" style="width:100%; text-align:left;">
+                <option value="All" ${currentAssignedTo === 'All' ? 'selected' : ''}>All Assignees</option>
+                ${uniqueAssignees.map(u => `<option value="${u}" ${u === currentAssignedTo ? 'selected' : ''}>${u}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="filters-popover-footer">
+              <button class="filter-reset-btn" id="filter-reset-btn" style="width:100%; justify-content:center; height:28px;">
+                <i data-lucide="x" style="width:12px; height:12px;"></i> Reset Filters
+              </button>
+            </div>
+          </div>
         </div>
-        
-        <select id="task-filter-status" class="filter-select">
-          <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
-          <option value="Completed" ${currentStatus === 'Completed' ? 'selected' : ''}>Completed</option>
-          <option value="All" ${currentStatus === 'All' ? 'selected' : ''}>All Tasks</option>
-        </select>
-        
-        <select id="task-filter-priority" class="filter-select">
-          <option value="All">All Priorities</option>
-          <option value="High" ${currentPriority === 'High' ? 'selected' : ''}>High Priority</option>
-          <option value="Medium" ${currentPriority === 'Medium' ? 'selected' : ''}>Medium Priority</option>
-          <option value="Low" ${currentPriority === 'Low' ? 'selected' : ''}>Low Priority</option>
-        </select>
       </div>
     </div>
 
@@ -188,4 +249,47 @@ export function renderTasks(app, store, engine) {
     app.activeTaskFilters.priority = e.target.value;
     renderTasks(app, store, engine);
   });
+  document.getElementById("task-filter-due").addEventListener("change", (e) => {
+    app.activeTaskFilters = app.activeTaskFilters || {};
+    app.activeTaskFilters.dueDate = e.target.value;
+    renderTasks(app, store, engine);
+  });
+  document.getElementById("task-filter-assigned").addEventListener("change", (e) => {
+    app.activeTaskFilters = app.activeTaskFilters || {};
+    app.activeTaskFilters.assignedTo = e.target.value;
+    renderTasks(app, store, engine);
+  });
+
+  document.getElementById("filter-reset-btn").addEventListener("click", () => {
+    app.activeTaskFilters = { status: "Pending", priority: "All", dueDate: "All", assignedTo: "All" };
+    renderTasks(app, store, engine);
+  });
+
+  // Popover toggle binding
+  const popover = document.getElementById("filters-popover");
+  const toggleBtn = document.getElementById("filters-toggle-btn");
+  
+  if (toggleBtn && popover) {
+    toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = popover.classList.contains("open");
+      if (isOpen) {
+        popover.classList.remove("open");
+      } else {
+        popover.classList.add("open");
+      }
+      app.filtersOpen = !isOpen;
+    });
+
+    popover.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (popover.classList.contains("open") && !popover.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+        popover.classList.remove("open");
+        app.filtersOpen = false;
+      }
+    });
+  }
 }

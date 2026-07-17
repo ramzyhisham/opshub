@@ -34,6 +34,18 @@ class OpsHubApp {
   boot() {
     // 1. Register Service Worker for PWA Offline Caching
     if ("serviceWorker" in navigator) {
+      // Clean up any stale service workers or caches from previous sessions
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+      if (window.caches) {
+        caches.keys().then(keys => {
+          keys.forEach(key => caches.delete(key));
+        });
+      }
+
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./service-worker.js")
           .then(reg => console.log("[OpsHub PWA] Service Worker registered:", reg.scope))
@@ -235,7 +247,10 @@ class OpsHubApp {
   }
 
   renderActiveView() {
-    document.getElementById("app-content").scrollTop = 0;
+    const appContent = document.getElementById("app-content");
+    if (appContent) {
+      appContent.scrollTop = 0;
+    }
     
     // Check if there is an active search query. If so, render global search page!
     const searchQuery = (document.getElementById("global-search-input")?.value || "").toLowerCase().trim();

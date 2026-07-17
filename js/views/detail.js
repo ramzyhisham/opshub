@@ -274,25 +274,10 @@ function renderOverviewTab(asset, container, store) {
 }
 
 function renderPaymentsTab(asset, container, store, engine, app) {
-  // Localization formatting preference
-  const settings = store.getSettings();
-  const pref = settings.preferences || { currency: "USD" };
-  const rates = settings.currencyRates || { USD: 1.0, INR: 83.5, EUR: 0.92, GBP: 0.78 };
-
-  const convertAmount = (val, fromCur, toCur) => {
-    if (!val) return 0;
-    const usdVal = val / (rates[fromCur] || 1.0);
-    return usdVal * (rates[toCur] || 1.0);
-  };
-  const userCurrency = pref.currency || "USD";
-
-  const formatValue = (amount) => {
-    const symbolMap = { USD: "$", INR: "₹", EUR: "€", GBP: "£", AED: "AED ", SAR: "SAR " };
-    const sym = symbolMap[userCurrency] || userCurrency + " ";
-    return sym + amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-
-  const convertedCost = convertAmount(asset.cost, asset.currency, userCurrency);
+  const userCurrency = store.getUserCurrency();
+  const convertAmount = (val, fromCur, toCur) => store.convertCost(val, fromCur, toCur);
+  const formatValue = (amount) => store.formatCost(amount, userCurrency);
+  const convertedCost = store.convertCost(asset.cost, asset.currency, userCurrency);
 
   container.innerHTML = `
     <!-- Costs Cards Converted to Preference -->

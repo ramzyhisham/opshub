@@ -218,19 +218,27 @@ button {
 }
 
 .sidebar-collapse-btn {
-  color: var(--text-muted);
-  width: 28px;
-  height: 28px;
+  color: var(--text-main);
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
 }
 .sidebar-collapse-btn:hover {
-  background-color: var(--bg-hover);
-  color: var(--text-main);
+  background-color: var(--bg-active);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
+.sidebar-collapse-btn:active {
+  transform: scale(0.95);
+}
+
 
 .sidebar-nav {
   flex: 1;
@@ -324,13 +332,62 @@ button {
   opacity: 0;
 }
 .app-sidebar.collapsed .nav-item {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0 auto;
   justify-content: center;
-  padding: 12px 0;
+  border-radius: var(--radius-md);
   position: relative;
+  transition: all var(--transition-fast);
+}
+.app-sidebar.collapsed .nav-item i {
+  width: 22px;
+  height: 22px;
+  color: var(--text-muted);
+  transform: scale(1.1);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+.app-sidebar.collapsed .nav-item:hover {
+  background-color: var(--bg-hover);
+}
+.app-sidebar.collapsed .nav-item:hover i {
+  color: var(--text-main);
+  transform: scale(1.25);
+}
+.app-sidebar.collapsed .nav-item.active {
+  background-color: rgba(99, 102, 241, 0.2);
+  border-left: none;
+}
+.app-sidebar.collapsed .nav-item.active i {
+  color: var(--color-primary);
+  transform: scale(1.2);
+}
+.app-sidebar.collapsed .nav-item.active:hover i {
+  color: var(--color-primary-hover);
+  transform: scale(1.3);
 }
 .app-sidebar.collapsed .theme-toggle-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0 auto;
   justify-content: center;
-  padding: 12px 0;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+.app-sidebar.collapsed .theme-toggle-btn i {
+  width: 22px;
+  height: 22px;
+  color: var(--text-muted);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+.app-sidebar.collapsed .theme-toggle-btn:hover {
+  background-color: var(--bg-hover);
+}
+.app-sidebar.collapsed .theme-toggle-btn:hover i {
+  color: var(--text-main);
+  transform: scale(1.15);
 }
 
 /* Smooth text fade for brand and nav labels */
@@ -353,8 +410,19 @@ button {
 .app-sidebar.collapsed .nav-item .badge-task-count {
   position: absolute;
   top: 4px;
-  right: 12px;
+  right: 4px;
   margin-left: 0;
+  transform: translate(25%, -25%);
+  font-size: 0.65rem;
+  padding: 2px 5px;
+  min-width: 14px;
+  height: 14px;
+  border: 2px solid var(--bg-sidebar);
+  box-sizing: content-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
 }
 
 /* Tooltip implementation for Collapsed Sidebar hover */
@@ -1969,52 +2037,225 @@ button {
 
 @media (max-width: 768px) {
   .app-sidebar {
-    position: fixed;
-    top: 0;
-    left: -280px;
-    height: 100vh;
-    z-index: 200;
-    transition: left var(--transition-normal);
-    display: flex; /* override the display:none */
+    display: none !important;
   }
-  .app-sidebar.mobile-open {
-    left: 0;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.4);
+  .mobile-menu-btn {
+    display: none !important;
+  }
+  .mobile-sidebar-overlay {
+    display: none !important;
   }
 
   .app-header {
-    height: 56px;
-    padding: 0 12px;
-    grid-template-columns: auto 1fr auto;
-    gap: 8px;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    row-gap: 12px !important;
+    column-gap: 12px !important;
+    height: auto !important;
+    padding: 12px 16px !important;
   }
 
-  .app-header .btn-quick-add span {
-    display: none; /* Icon-only on mobile headers */
+  .header-left {
+    grid-column: 1 / 2 !important;
+    grid-row: 1 / 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .company-selector-wrapper {
+    width: 100% !important;
+  }
+
+  .company-selector-wrapper .custom-select-container {
+    width: 100% !important;
+    min-width: 100px !important;
+    max-width: 100% !important;
+  }
+
+  .company-selector-wrapper .custom-select-trigger {
+    width: 100% !important;
+  }
+
+  .header-right {
+    grid-column: 2 / 3 !important;
+    grid-row: 1 / 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
   }
 
   .header-search {
-    display: flex; /* Show on mobile too */
+    grid-column: 1 / 3 !important;
+    grid-row: 2 / 3 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    display: flex !important;
   }
 
   .header-search-inner {
-    max-width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .header-search-inner input {
+    width: 100% !important;
+    padding: 0 36px 0 36px !important;
+  }
+
+  .search-shortcut-badge {
+    display: none !important;
+  }
+
+  .btn-quick-add {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    min-width: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .btn-quick-add span {
+    display: none !important;
+  }
+
+  .btn-quick-add i {
+    margin: 0 !important;
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  /* 2 KPI cards per row on mobile */
+  .stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .stat-card {
+    padding: 12px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    height: 100% !important;
+  }
+
+  .stat-icon-box {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+
+  .stat-icon-box i {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .stat-details h4 {
+    font-size: 0.7rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  .stat-value {
+    font-size: 1.15rem !important;
+  }
+
+  /* Collapse projects grid columns */
+  .project-details-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Allow month/week calendar grid to scroll horizontally */
+  #calendar-view-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px !important;
+    width: 100% !important;
+  }
+
+  .calendar-grid {
+    min-width: 750px !important;
+  }
+
+  /* Optimize Calendar agenda view items */
+  .agenda-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+
+  .agenda-item > div:first-child {
+    width: 100% !important;
+  }
+
+  .agenda-item > div:last-child {
+    width: 100% !important;
+    justify-content: space-between !important;
+    border-top: 1px solid var(--border-color) !important;
+    padding-top: 8px !important;
+  }
+
+  /* Optimize Timeline entries */
+  .timeline-event-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+
+  .timeline-event-row > div:first-child {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .timeline-event-row > div:first-child > div:first-child {
+    min-width: unset !important;
+    font-size: 0.75rem !important;
+    background-color: var(--bg-hover);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+  }
+
+  .timeline-event-row > div:first-child > div:last-child {
+    width: 100% !important;
+  }
+
+  .timeline-event-row span {
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  .timeline-event-row > div:last-child {
+    width: 100% !important;
+    justify-content: space-between !important;
+    border-top: 1px solid var(--border-color) !important;
+    padding-top: 8px !important;
+  }
+
+  /* Collapse detail drawer nested inline grids */
+  .detail-drawer [style*="grid-template-columns: 1fr 1fr"],
+  .detail-drawer [style*="grid-template-columns: 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Collapse spend widget in Dashboard */
+  [data-widget="spend"] {
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+    gap: 12px !important;
   }
   
   .app-content-area {
     padding: 16px;
     padding-bottom: 80px; /* Space for bottom nav bar */
-  }
-
-  .mobile-sidebar-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 199;
-  }
-  .mobile-sidebar-overlay.active {
-    display: block;
   }
   
   .app-bottom-nav {
@@ -2052,10 +2293,6 @@ button {
   
   .bottom-nav-item.active {
     color: var(--color-primary);
-  }
-
-  .mobile-menu-btn {
-    display: flex;
   }
 
   .detail-drawer {
@@ -2204,4 +2441,46 @@ button {
   color: var(--text-main);
   text-decoration: none;
   font-weight: 600;
+}
+
+/* --- Standardized Popover System --- */
+.filters-popover-container {
+  position: relative;
+  display: inline-block;
+}
+
+.filters-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1000;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  width: 280px;
+  box-shadow: var(--shadow-lg);
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  animation: dropdownFade var(--transition-fast) forwards;
+}
+
+.filters-popover.open {
+  display: flex;
+}
+
+.filters-popover-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.filters-popover-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
 }

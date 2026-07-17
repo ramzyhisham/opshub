@@ -77,7 +77,14 @@ self.addEventListener("fetch", event => {
 
         // Put search parameters/analytics external calls aside, cache basic local routes
         const responseToCache = networkResponse.clone();
-        if (event.request.url.startsWith(self.location.origin)) {
+        const url = new URL(event.request.url);
+        const path = url.pathname;
+        const isStatic = ASSETS.some(asset => {
+          const resolved = asset.replace("./", "/");
+          return path === resolved || path === resolved + "index.html";
+        }) || path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".png") || path.endsWith(".json");
+
+        if (isStatic && event.request.url.startsWith(self.location.origin)) {
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseToCache);
           });

@@ -15,6 +15,19 @@ export function renderProjects(app, store, engine) {
   const domainNode = projectAssets.find(a => a.category === "Domain");
   const isDomainExpired = domainNode && (domainNode.status === "Expired" || domainNode.status === "Cancelled");
 
+  const userCurrency = store.getUserCurrency();
+  const settings = store.getSettings();
+  const numFormat = settings.preferences?.numberFormat || "International";
+  const formatStatVal = (amount) => {
+    const symbol = store.getCurrencySymbol(userCurrency);
+    let formattedVal;
+    if (numFormat === "Indian") {
+      formattedVal = amount.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+    } else {
+      formattedVal = amount.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    }
+    return `${symbol}${formattedVal}`;
+  };
   let projectMonthlySpend = 0;
   let projectAnnualSpend = 0;
   let expiredNodes = 0;
@@ -25,15 +38,16 @@ export function renderProjects(app, store, engine) {
     else if (a.status === "Renew Soon") warningNodes++;
 
     if (a.cost && a.status !== "Cancelled") {
+      const convertedCost = store.convertCost(a.cost, a.currency, userCurrency);
       if (a.renewalType === "Monthly") {
-        projectMonthlySpend += a.cost;
-        projectAnnualSpend += a.cost * 12;
+        projectMonthlySpend += convertedCost;
+        projectAnnualSpend += convertedCost * 12;
       } else if (a.renewalType === "Quarterly") {
-        projectMonthlySpend += a.cost / 3;
-        projectAnnualSpend += a.cost * 4;
+        projectMonthlySpend += convertedCost / 3;
+        projectAnnualSpend += convertedCost * 4;
       } else if (a.renewalType === "Yearly") {
-        projectMonthlySpend += a.cost / 12;
-        projectAnnualSpend += a.cost;
+        projectMonthlySpend += convertedCost / 12;
+        projectAnnualSpend += convertedCost;
       }
     }
   });
@@ -76,14 +90,14 @@ export function renderProjects(app, store, engine) {
         <div class="stat-icon-box"><i data-lucide="credit-card"></i></div>
         <div class="stat-details">
           <h4>Monthly Cost</h4>
-          <div class="stat-value">$${projectMonthlySpend.toFixed(0)}</div>
+          <div class="stat-value">${formatStatVal(projectMonthlySpend)}</div>
         </div>
       </div>
       <div class="card stat-card stat-success">
         <div class="stat-icon-box"><i data-lucide="calendar"></i></div>
         <div class="stat-details">
           <h4>Annual Cost</h4>
-          <div class="stat-value">$${projectAnnualSpend.toFixed(0)}</div>
+          <div class="stat-value">${formatStatVal(projectAnnualSpend)}</div>
         </div>
       </div>
       <div class="card stat-card ${isDomainExpired || expiredNodes > 0 ? 'stat-danger' : (warningNodes > 0 ? 'stat-warning' : 'stat-success')}">
@@ -97,7 +111,7 @@ export function renderProjects(app, store, engine) {
       </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start;">
+    <div class="project-details-grid">
       
       <!-- Dependency Flow Column -->
       <div class="card" style="padding: 20px;">
@@ -209,7 +223,7 @@ export function renderProjects(app, store, engine) {
                   <tr class="project-asset-row clickable-row" data-id="${a.id}">
                     <td data-label="Asset"><strong>${a.name}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${a.provider || a.company}</span></td>
                     <td data-label="Category">${a.category}</td>
-                    <td data-label="Cost" style="font-weight:600;">${a.cost > 0 ? `${a.currency} ${a.cost.toFixed(2)}` : 'Free'}</td>
+                    <td data-label="Cost" style="font-weight:600;">${a.cost > 0 ? store.formatCost(a.cost, a.currency) : 'Free'}</td>
                     <td data-label="Renews">${a.renewalDate || 'N/A'}</td>
                     <td data-label="Status"><span class="badge ${statusClass}">${statusLabel}</span></td>
                   </tr>

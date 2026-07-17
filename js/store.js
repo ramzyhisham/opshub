@@ -594,4 +594,41 @@ export class OpsHubStore {
     localStorage.removeItem(this.keySettings);
     this.init();
   }
+
+  // --- CURRENCY CONVERSION AND FORMATTING ---
+  getUserCurrency() {
+    const settings = this.getSettings();
+    return settings.preferences?.currency || "USD";
+  }
+
+  getCurrencySymbol(currencyCode) {
+    const symbolMap = { USD: "$", INR: "₹", EUR: "€", GBP: "£", AED: "AED ", SAR: "SAR " };
+    return symbolMap[currencyCode] || currencyCode;
+  }
+
+  convertCost(val, fromCur, toCur) {
+    if (!val) return 0;
+    const settings = this.getSettings();
+    const rates = settings.currencyRates || { USD: 1.0, INR: 83.5, EUR: 0.92, GBP: 0.78, AED: 3.67, SAR: 3.75 };
+    const usdVal = val / (rates[fromCur] || 1.0);
+    return usdVal * (rates[toCur] || 1.0);
+  }
+
+  formatCost(val, fromCur) {
+    if (val === undefined || val === null) return "";
+    const userCurrency = this.getUserCurrency();
+    const converted = this.convertCost(val, fromCur, userCurrency);
+    const symbol = this.getCurrencySymbol(userCurrency);
+    
+    const settings = this.getSettings();
+    const numFormat = settings.preferences?.numberFormat || "International";
+    let formattedVal;
+    if (numFormat === "Indian") {
+      formattedVal = converted.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else {
+      formattedVal = converted.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return `${symbol}${formattedVal}`;
+  }
 }
+

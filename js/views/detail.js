@@ -68,17 +68,23 @@ export function renderDetailDrawer(assetId, store, app, engine) {
   const bodyContent = drawer.querySelector("#drawer-body-content");
   
   if (activeTab === "payments") {
-    bodyContent.style.height = "100%";
+    bodyContent.style.height = "auto";
+    bodyContent.style.flex = "1";
+    bodyContent.style.minHeight = "0";
     bodyContent.style.display = "flex";
     bodyContent.style.flexDirection = "column";
     bodyContent.style.gap = "16px";
+    bodyContent.style.overflowY = "hidden";
     bodyContent.parentElement.style.overflowY = "hidden";
   } else {
     bodyContent.style.height = "";
+    bodyContent.style.flex = "";
+    bodyContent.style.minHeight = "";
     bodyContent.style.display = "";
     bodyContent.style.flexDirection = "";
     bodyContent.style.gap = "";
-    bodyContent.parentElement.style.overflowY = "auto";
+    bodyContent.style.overflowY = "auto";
+    bodyContent.parentElement.style.overflowY = "hidden";
   }
 
   if (activeTab === "overview") {

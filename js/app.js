@@ -22,7 +22,7 @@ class OpsHubApp {
     // Initial state
     this.currentView = "#dashboard";
     this.currentCompany = "Global";
-    this.activeFilters = { category: "All", status: "All", renewal: "All", owner: "All" };
+    this.activeFilters = { category: "All", status: "All", renewal: "All" };
     this.activeProject = "";
     this.activeCalendarFilters = { category: "All" };
     this.activeTaskFilters = { status: "Pending", priority: "All" };

@@ -513,18 +513,33 @@ export class OpsHubStore {
     if (index !== -1) {
       const old = assets[index];
       
-      const merged = {
-        ...old,
-        ...updatedAsset,
-        isPinned: updatedAsset.isPinned !== undefined ? updatedAsset.isPinned : old.isPinned,
-        isFavorite: updatedAsset.isFavorite !== undefined ? updatedAsset.isFavorite : old.isFavorite,
-        pinned: updatedAsset.pinned !== undefined ? updatedAsset.pinned : old.pinned,
-        favorite: updatedAsset.favorite !== undefined ? updatedAsset.favorite : old.favorite,
-        paymentHistory: updatedAsset.paymentHistory !== undefined ? updatedAsset.paymentHistory : (old.paymentHistory || []),
-        renewalHistory: updatedAsset.renewalHistory !== undefined ? updatedAsset.renewalHistory : (old.renewalHistory || []),
-        attachments: updatedAsset.attachments !== undefined ? updatedAsset.attachments : (old.attachments || []),
-        activityLog: updatedAsset.activityLog !== undefined ? updatedAsset.activityLog : (old.activityLog || [])
-      };
+      // Start with a clone of the old asset to preserve all existing state
+      const merged = { ...old };
+      
+      // Update fields from updatedAsset only if they are not undefined
+      for (const key in updatedAsset) {
+        if (updatedAsset[key] !== undefined) {
+          merged[key] = updatedAsset[key];
+        }
+      }
+      
+      // Explicitly protect and preserve system-managed properties
+      const systemProperties = [
+        "isPinned", "isFavorite", "pinned", "favorite", 
+        "paymentHistory", "renewalHistory", "attachments", "activityLog"
+      ];
+      
+      systemProperties.forEach(prop => {
+        if (updatedAsset[prop] === undefined || updatedAsset[prop] === null) {
+          merged[prop] = old[prop] !== undefined ? old[prop] : (Array.isArray(old[prop]) ? [] : (prop.startsWith("is") ? false : old[prop]));
+        }
+      });
+      
+      // Ensure arrays are initialized
+      merged.paymentHistory = merged.paymentHistory || [];
+      merged.renewalHistory = merged.renewalHistory || [];
+      merged.attachments = merged.attachments || [];
+      merged.activityLog = merged.activityLog || [];
 
       merged.activityLog.push({
         id: "al-" + Date.now(),

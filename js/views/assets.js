@@ -2,10 +2,15 @@
 import { convertSelects } from "../components/dropdown.js";
 
 export function renderAssets(app, store, engine) {
+  // Capture focus/cursor state of search input before re-rendering
+  const searchInputActive = document.activeElement && document.activeElement.id === "filter-search-inline";
+  const searchCursorPos = searchInputActive ? document.activeElement.selectionStart : null;
+
   const currentCategory = app.activeFilters.category || "All";
   const currentStatus = app.activeFilters.status || "All";
   const currentRenewal = app.activeFilters.renewal || "All";
   const searchQuery = (app.activeFilters.search || "").toLowerCase();
+  const filtersOpen = app.filtersOpen || false;
 
   // Filter assets based on the active criteria
   let assets = store.getAssets().filter(a => {
@@ -57,7 +62,7 @@ export function renderAssets(app, store, engine) {
         </button>
 
         <!-- Toggleable filters popover container -->
-        <div id="filters-popover" class="filters-popover" style="display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 1000; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; width: 280px; box-shadow: var(--shadow-lg); flex-direction: column; gap: 12px;">
+        <div id="filters-popover" class="filters-popover" style="display: ${filtersOpen ? 'flex' : 'none'}; position: absolute; top: calc(100% + 8px); right: 0; z-index: 1000; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; width: 280px; box-shadow: var(--shadow-lg); flex-direction: column; gap: 12px;">
           <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-main); margin-bottom: 4px;">Filter Assets</div>
           
           <div class="form-group" style="margin-bottom:0">
@@ -178,6 +183,17 @@ export function renderAssets(app, store, engine) {
   // Render newly inserted templates
   lucide.createIcons();
 
+  // Restore focus to search input if it was active
+  if (searchInputActive) {
+    const input = document.getElementById("filter-search-inline");
+    if (input) {
+      input.focus();
+      if (searchCursorPos !== null) {
+        input.setSelectionRange(searchCursorPos, searchCursorPos);
+      }
+    }
+  }
+
   // --- BIND EVENT HANDLERS ---
 
   // Filters binding
@@ -195,7 +211,7 @@ export function renderAssets(app, store, engine) {
   });
 
   document.getElementById("filter-reset-btn").addEventListener("click", () => {
-    app.activeFilters = { category: "All", status: "All", renewal: "All", owner: "All", search: "" };
+    app.activeFilters = { category: "All", status: "All", renewal: "All", search: "" };
     renderAssets(app, store, engine);
   });
 
@@ -217,6 +233,7 @@ export function renderAssets(app, store, engine) {
       e.stopPropagation();
       const isOpen = popover.style.display === "flex";
       popover.style.display = isOpen ? "none" : "flex";
+      app.filtersOpen = !isOpen;
       
       // Auto focus search field when opening filters
       if (!isOpen) {
@@ -233,6 +250,7 @@ export function renderAssets(app, store, engine) {
     document.addEventListener("click", (e) => {
       if (popover.style.display === "flex" && !popover.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
         popover.style.display = "none";
+        app.filtersOpen = false;
       }
     });
   }

@@ -307,11 +307,14 @@ export function renderDashboard(app, store, engine) {
   container.innerHTML = `
     <div class="view-header">
       <div class="view-title-group">
-        <h2>Global Operations Dashboard</h2>
-        <p>Operational health metrics, aggregated billing cost curves, and renewal tasks checklist</p>
+        <div class="title-badge-row" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <h2>Global Operations Dashboard</h2>
+          <span class="badge status-active mobile-viewport-badge" style="padding: 4px 8px; font-size: 0.75rem; height: 22px; display: none;">Viewport: Global</span>
+        </div>
+        <p class="dashboard-description">Operational health metrics, aggregated billing cost curves, and renewal tasks checklist</p>
       </div>
       <div class="header-actions">
-        <span class="badge status-active" style="padding: 8px 12px; font-size:0.85rem">Viewport: Global</span>
+        <span class="badge status-active desktop-viewport-badge" style="padding: 8px 12px; font-size:0.85rem">Viewport: Global</span>
       </div>
     </div>
 
